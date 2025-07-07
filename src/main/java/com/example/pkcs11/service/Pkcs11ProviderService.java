@@ -1,0 +1,180 @@
+package com.example.pkcs11.service;
+
+import com.example.pkcs11.config.Pkcs11Properties;
+import com.example.pkcs11.exception.KeyNotFoundException;
+import com.example.pkcs11.exception.SigningException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import java.security.*;
+import java.security.cert.Certificate;
+import java.util.Enumeration;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+@Service
+public class Pkcs11ProviderService {
+
+    private static final Logger logger = LoggerFactory.getLogger(Pkcs11ProviderService.class);
+
+    @Autowired
+    private Provider pkcs11Provider;
+
+    @Autowired
+    private Map<String, Pkcs11Properties.KeyConfig> keyConfigMap;
+
+    // Cache for key stores to avoid repeated PIN authentication
+    private final Map<String, KeyStore> keyStoreCache = new ConcurrentHashMap<>();
+
+    /**
+     * Retrieves a private key from the PKCS#11 token
+     */
+    public PrivateKey getPrivateKey(String keyLabel) {
+        try {
+            Pkcs11Properties.KeyConfig keyConfig = keyConfigMap.get(keyLabel);
+            if (keyConfig == null) {
+                throw new KeyNotFoundException("Key configuration not found for label: " + keyLabel);
+            }
+
+            KeyStore keyStore = getKeyStore(keyLabel, keyConfig);
+            
+            // Find the key by alias
+            PrivateKey privateKey = findPrivateKeyByLabel(keyStore, keyLabel);
+            if (privateKey == null) {
+                throw new KeyNotFoundException("Private key not found for label: " + keyLabel);
+            }
+
+            logger.debug("Successfully retrieved private key for label: {}", keyLabel);
+            return privateKey;
+
+        } catch (KeyNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Failed to retrieve private key for label: {}", keyLabel, e);
+            throw new SigningException("Failed to retrieve private key: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Gets or creates a KeyStore for the specified key configuration
+     */
+    private KeyStore getKeyStore(String keyLabel, Pkcs11Properties.KeyConfig keyConfig) throws Exception {
+        // Use keyLabel as cache key since each key might have different PIN
+        return keyStoreCache.computeIfAbsent(keyLabel, k -> {
+            try {
+                KeyStore keyStore = KeyStore.getInstance("PKCS11", pkcs11Provider);
+                char[] pin = keyConfig.getPin().toCharArray();
+                keyStore.load(null, pin);
+                logger.debug("KeyStore loaded successfully for key: {}", keyLabel);
+                return keyStore;
+            } catch (Exception e) {
+                logger.error("Failed to load KeyStore for key: {}", keyLabel, e);
+                throw new SigningException("Failed to load KeyStore: " + e.getMessage(), e);
+            }
+        });
+    }
+
+    /**
+     * Finds a private key by label in the KeyStore
+     */
+    private PrivateKey findPrivateKeyByLabel(KeyStore keyStore, String keyLabel) throws Exception {
+        Enumeration<String> aliases = keyStore.aliases();
+        
+        while (aliases.hasMoreElements()) {
+            String alias = aliases.nextElement();
+            logger.debug("Checking alias: {}", alias);
+            
+            // Check if this alias matches our key label or contains it
+            if (alias.equals(keyLabel) || alias.contains(keyLabel)) {
+                if (keyStore.isKeyEntry(alias)) {
+                    Key key = keyStore.getKey(alias, null); // PKCS#11 doesn't use key passwords
+                    if (key instanceof PrivateKey) {
+                        logger.debug("Found private key with alias: {}", alias);
+                        return (PrivateKey) key;
+                    }
+                }
+            }
+        }
+        
+        // If exact match not found, try to find by certificate subject or other attributes
+        return findPrivateKeyByAttributes(keyStore, keyLabel);
+    }
+
+    /**
+     * Alternative method to find private key by certificate attributes
+     */
+    private PrivateKey findPrivateKeyByAttributes(KeyStore keyStore, String keyLabel) throws Exception {
+        Enumeration<String> aliases = keyStore.aliases();
+        
+        while (aliases.hasMoreElements()) {
+            String alias = aliases.nextElement();
+            
+            if (keyStore.isKeyEntry(alias)) {
+                Certificate cert = keyStore.getCertificate(alias);
+                if (cert != null) {
+                    // You could add more sophisticated matching logic here
+                    // For now, we'll just check if the alias contains the label
+                    if (alias.toLowerCase().contains(keyLabel.toLowerCase())) {
+                        Key key = keyStore.getKey(alias, null);
+                        if (key instanceof PrivateKey) {
+                            logger.debug("Found private key with matching alias: {}", alias);
+                            return (PrivateKey) key;
+                        }
+                    }
+                }
+            }
+        }
+        
+        return null;
+    }
+
+    /**
+     * Gets the algorithm name for signing based on key type and private key
+     */
+    public String getSigningAlgorithm(String algorithmType, PrivateKey privateKey) {
+        switch (algorithmType.toUpperCase()) {
+            case "RSA":
+                return "SHA256withRSA";
+            case "EC":
+                return "SHA256withECDSA";
+            default:
+                throw new IllegalArgumentException("Unsupported algorithm type: " + algorithmType);
+        }
+    }
+
+    /**
+     * Validates that the key type matches the private key algorithm
+     */
+    public void validateKeyType(String expectedType, PrivateKey privateKey) {
+        String keyAlgorithm = privateKey.getAlgorithm();
+        
+        boolean isValid = false;
+        switch (expectedType.toUpperCase()) {
+            case "RSA":
+                isValid = "RSA".equals(keyAlgorithm);
+                break;
+            case "EC":
+                isValid = "EC".equals(keyAlgorithm) || "ECDSA".equals(keyAlgorithm);
+                break;
+        }
+        
+        if (!isValid) {
+            throw new IllegalArgumentException(
+                String.format("Key type mismatch. Expected: %s, Found: %s", expectedType, keyAlgorithm)
+            );
+        }
+    }
+
+    /**
+     * Clears the key store cache (useful for testing or configuration changes)
+     */
+    public void clearCache() {
+        keyStoreCache.clear();
+        logger.info("KeyStore cache cleared");
+    }
+}

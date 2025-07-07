@@ -1,0 +1,38 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: pkcs11-signing-service
+
+# PKCS#11 Configuration
+pkcs11:
+  library: ${PKCS11_LIBRARY:/opt/hsm/lib/libpkcs11.so}
+  slot: ${PKCS11_SLOT:0}
+  provider-name: ${PKCS11_PROVIDER_NAME:HSM-Provider}
+  keys:
+    - label: ${RSA_KEY_LABEL:my-rsa-key}
+      pin: ${RSA_KEY_PIN:1234}
+      type: RSA
+    - label: ${ECC_KEY_LABEL:my-ecc-key}
+      pin: ${ECC_KEY_PIN:5678}
+      type: EC
+
+# Logging configuration
+logging:
+  level:
+    com.example.pkcs11: INFO
+    org.springframework.security: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Management endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized

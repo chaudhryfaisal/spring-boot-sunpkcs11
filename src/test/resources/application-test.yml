@@ -1,0 +1,34 @@
+# Test configuration - uses mock PKCS#11 provider
+spring:
+  profiles:
+    active: test
+
+pkcs11:
+  library: /usr/lib/softhsm/libsofthsm2.so
+  slot: 0
+  provider-name: softhsm
+  keys:
+    - label: rsa-2048
+      pin: 1234
+      type: RSA
+    - label: ecc-256
+      pin: 5678
+      type: EC
+
+# Test logging configuration
+logging:
+  level:
+    com.example.pkcs11: DEBUG
+    org.springframework.web: WARN
+    org.springframework.security: WARN
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# Test server configuration
+server:
+  port: 0  # Random port for tests
+
+# Disable management endpoints for tests
+management:
+  endpoints:
+    enabled-by-default: false
