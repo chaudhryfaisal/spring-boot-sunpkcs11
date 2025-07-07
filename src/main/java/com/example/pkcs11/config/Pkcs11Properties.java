@@ -1,5 +1,6 @@
 package com.example.pkcs11.config;
 
+import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -9,6 +10,7 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
+@Data
 @Component
 @ConfigurationProperties(prefix = "pkcs11")
 public class Pkcs11Properties {
@@ -28,70 +30,13 @@ public class Pkcs11Properties {
     @NotEmpty
     private List<KeyConfig> keys;
 
-    // Getters and setters
-    public String getLibrary() {
-        return library;
-    }
-
-    public void setLibrary(String library) {
-        this.library = library;
-    }
-
-    public int getSlot() {
-        return slot;
-    }
-
-    public void setSlot(int slot) {
-        this.slot = slot;
-    }
-
-    public String getProviderName() {
-        return providerName;
-    }
-
-    public void setProviderName(String providerName) {
-        this.providerName = providerName;
-    }
-
-    public String getPin() {
-        return pin;
-    }
-
-    public void setPin(String pin) {
-        this.pin = pin;
-    }
-
-    public List<KeyConfig> getKeys() {
-        return keys;
-    }
-
-    public void setKeys(List<KeyConfig> keys) {
-        this.keys = keys;
-    }
-
+    @Data
     public static class KeyConfig {
         @NotBlank
         private String label;
 
         @NotNull
         private KeyType type;
-
-        // Getters and setters
-        public String getLabel() {
-            return label;
-        }
-
-        public void setLabel(String label) {
-            this.label = label;
-        }
-
-        public KeyType getType() {
-            return type;
-        }
-
-        public void setType(KeyType type) {
-            this.type = type;
-        }
     }
 
     public enum KeyType {

@@ -1,8 +1,15 @@
 package com.example.pkcs11.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class SignRequest {
 
     @NotBlank(message = "Key label is required")
@@ -14,41 +21,6 @@ public class SignRequest {
 
     @NotBlank(message = "Data is required")
     private String data;
-
-    // Default constructor
-    public SignRequest() {}
-
-    // Constructor with parameters
-    public SignRequest(String keyLabel, String algorithm, String data) {
-        this.keyLabel = keyLabel;
-        this.algorithm = algorithm;
-        this.data = data;
-    }
-
-    // Getters and setters
-    public String getKeyLabel() {
-        return keyLabel;
-    }
-
-    public void setKeyLabel(String keyLabel) {
-        this.keyLabel = keyLabel;
-    }
-
-    public String getAlgorithm() {
-        return algorithm;
-    }
-
-    public void setAlgorithm(String algorithm) {
-        this.algorithm = algorithm;
-    }
-
-    public String getData() {
-        return data;
-    }
-
-    public void setData(String data) {
-        this.data = data;
-    }
 
     @Override
     public String toString() {

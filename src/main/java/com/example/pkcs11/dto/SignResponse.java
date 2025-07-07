@@ -1,25 +1,15 @@
 package com.example.pkcs11.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class SignResponse {
 
     private String signature;
-
-    // Default constructor
-    public SignResponse() {}
-
-    // Constructor with parameter
-    public SignResponse(String signature) {
-        this.signature = signature;
-    }
-
-    // Getter and setter
-    public String getSignature() {
-        return signature;
-    }
-
-    public void setSignature(String signature) {
-        this.signature = signature;
-    }
 
     @Override
     public String toString() {
