@@ -3,12 +3,11 @@ pkcs11:
   library: /usr/local/lib/softhsm/libsofthsm2.so
   slot: 0
   provider-name: SoftHSM-Provider
+  pin: 1234
   keys:
     - label: test-rsa-key
-      pin: 1234
       type: RSA
     - label: test-ecc-key
-      pin: 1234
       type: EC
 
 # Enhanced logging for development

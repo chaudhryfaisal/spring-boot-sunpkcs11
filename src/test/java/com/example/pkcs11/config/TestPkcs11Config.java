@@ -40,12 +40,10 @@ public class TestPkcs11Config {
         // Create mock key configurations for testing
         Pkcs11Properties.KeyConfig rsaKey = new Pkcs11Properties.KeyConfig();
         rsaKey.setLabel("rsa-2048");
-        rsaKey.setPin("1234");
         rsaKey.setType(Pkcs11Properties.KeyType.RSA);
         
         Pkcs11Properties.KeyConfig ecKey = new Pkcs11Properties.KeyConfig();
         ecKey.setLabel("ecc-256");
-        ecKey.setPin("5678");
         ecKey.setType(Pkcs11Properties.KeyType.EC);
         
         keyMap.put("rsa-2048", rsaKey);

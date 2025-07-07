@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -14,6 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
+@Profile("!test")
 public class Pkcs11Config {
 
     private static final Logger logger = LoggerFactory.getLogger(Pkcs11Config.class);

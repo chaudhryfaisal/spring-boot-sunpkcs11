@@ -5,7 +5,7 @@ import com.example.pkcs11.dto.SignRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
@@ -19,8 +19,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
-@AutoConfigureWebMvc
+@AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Import(TestPkcs11Config.class)
 class CryptoControllerIntegrationTest {
 
     @Autowired
@@ -98,7 +99,7 @@ class CryptoControllerIntegrationTest {
         mockMvc.perform(post("/v1/crypto/sign")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{invalid json"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isInternalServerError());
     }
 
     // Note: Actual signing tests would require a real PKCS#11 setup

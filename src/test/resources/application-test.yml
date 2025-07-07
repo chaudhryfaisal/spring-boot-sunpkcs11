@@ -1,18 +1,13 @@
 # Test configuration - uses mock PKCS#11 provider
-spring:
-  profiles:
-    active: test
-
 pkcs11:
   library: /usr/lib/softhsm/libsofthsm2.so
   slot: 0
   provider-name: softhsm
+  pin: 1234
   keys:
     - label: rsa-2048
-      pin: 1234
       type: RSA
     - label: ecc-256
-      pin: 5678
       type: EC
 
 # Test logging configuration

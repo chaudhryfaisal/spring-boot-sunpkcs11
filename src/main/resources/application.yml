@@ -10,12 +10,11 @@ pkcs11:
   library: ${PKCS11_LIBRARY:/opt/hsm/lib/libpkcs11.so}
   slot: ${PKCS11_SLOT:0}
   provider-name: ${PKCS11_PROVIDER_NAME:HSM-Provider}
+  pin: ${PKCS11_PIN:1234}
   keys:
     - label: ${RSA_KEY_LABEL:my-rsa-key}
-      pin: ${RSA_KEY_PIN:1234}
       type: RSA
     - label: ${ECC_KEY_LABEL:my-ecc-key}
-      pin: ${ECC_KEY_PIN:5678}
       type: EC
 
 # Logging configuration

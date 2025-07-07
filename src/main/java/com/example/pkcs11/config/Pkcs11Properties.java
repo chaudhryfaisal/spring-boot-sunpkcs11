@@ -21,6 +21,9 @@ public class Pkcs11Properties {
     @NotBlank
     private String providerName = "PKCS11-Provider";
 
+    @NotBlank
+    private String pin;
+
     @Valid
     @NotEmpty
     private List<KeyConfig> keys;
@@ -50,6 +53,14 @@ public class Pkcs11Properties {
         this.providerName = providerName;
     }
 
+    public String getPin() {
+        return pin;
+    }
+
+    public void setPin(String pin) {
+        this.pin = pin;
+    }
+
     public List<KeyConfig> getKeys() {
         return keys;
     }
@@ -62,9 +73,6 @@ public class Pkcs11Properties {
         @NotBlank
         private String label;
 
-        @NotBlank
-        private String pin;
-
         @NotNull
         private KeyType type;
 
@@ -75,14 +83,6 @@ public class Pkcs11Properties {
 
         public void setLabel(String label) {
             this.label = label;
-        }
-
-        public String getPin() {
-            return pin;
-        }
-
-        public void setPin(String pin) {
-            this.pin = pin;
         }
 
         public KeyType getType() {

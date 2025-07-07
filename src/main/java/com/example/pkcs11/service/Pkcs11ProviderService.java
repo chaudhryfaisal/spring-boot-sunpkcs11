@@ -6,6 +6,7 @@ import com.example.pkcs11.exception.SigningException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.BadPaddingException;
@@ -18,6 +19,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
+@Profile("!test")
 public class Pkcs11ProviderService {
 
     private static final Logger logger = LoggerFactory.getLogger(Pkcs11ProviderService.class);
@@ -26,10 +28,13 @@ public class Pkcs11ProviderService {
     private Provider pkcs11Provider;
 
     @Autowired
+    private Pkcs11Properties pkcs11Properties;
+
+    @Autowired
     private Map<String, Pkcs11Properties.KeyConfig> keyConfigMap;
 
-    // Cache for key stores to avoid repeated PIN authentication
-    private final Map<String, KeyStore> keyStoreCache = new ConcurrentHashMap<>();
+    // Cache for key store to avoid repeated PIN authentication
+    private volatile KeyStore cachedKeyStore;
 
     /**
      * Retrieves a private key from the PKCS#11 token
@@ -61,22 +66,26 @@ public class Pkcs11ProviderService {
     }
 
     /**
-     * Gets or creates a KeyStore for the specified key configuration
+     * Gets or creates a KeyStore for the PKCS#11 provider
      */
     private KeyStore getKeyStore(String keyLabel, Pkcs11Properties.KeyConfig keyConfig) throws Exception {
-        // Use keyLabel as cache key since each key might have different PIN
-        return keyStoreCache.computeIfAbsent(keyLabel, k -> {
-            try {
-                KeyStore keyStore = KeyStore.getInstance("PKCS11", pkcs11Provider);
-                char[] pin = keyConfig.getPin().toCharArray();
-                keyStore.load(null, pin);
-                logger.debug("KeyStore loaded successfully for key: {}", keyLabel);
-                return keyStore;
-            } catch (Exception e) {
-                logger.error("Failed to load KeyStore for key: {}", keyLabel, e);
-                throw new SigningException("Failed to load KeyStore: " + e.getMessage(), e);
+        if (cachedKeyStore == null) {
+            synchronized (this) {
+                if (cachedKeyStore == null) {
+                    try {
+                        KeyStore keyStore = KeyStore.getInstance("PKCS11", pkcs11Provider);
+                        char[] pin = pkcs11Properties.getPin().toCharArray();
+                        keyStore.load(null, pin);
+                        logger.debug("KeyStore loaded successfully with provider PIN");
+                        cachedKeyStore = keyStore;
+                    } catch (Exception e) {
+                        logger.error("Failed to load KeyStore with provider PIN", e);
+                        throw new SigningException("Failed to load KeyStore: " + e.getMessage(), e);
+                    }
+                }
             }
-        });
+        }
+        return cachedKeyStore;
     }
 
     /**
@@ -174,7 +183,9 @@ public class Pkcs11ProviderService {
      * Clears the key store cache (useful for testing or configuration changes)
      */
     public void clearCache() {
-        keyStoreCache.clear();
+        synchronized (this) {
+            cachedKeyStore = null;
+        }
         logger.info("KeyStore cache cleared");
     }
 }
