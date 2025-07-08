@@ -157,7 +157,7 @@ const params = {
 };
 
 export default function () {
-  const res = http.post('http://localhost:8080/v1/crypto/sign', payload, params);
+  const res = http.post('http://localhost:8085/v1/crypto/sign', payload, params);
   check(res, {
     'status was 200': (r) => r.status === 200,
     'signature present': (r) => JSON.parse(r.body).signature !== undefined,

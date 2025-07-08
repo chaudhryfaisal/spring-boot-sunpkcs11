@@ -27,7 +27,7 @@ public class CryptoController {
      */
     @PostMapping("/sign")
     public ResponseEntity<SignResponse> signData(@Valid @RequestBody SignRequest request) {
-        logger.info("Received signing request for key: {}, algorithm: {}", 
+        logger.debug("Received signing request for key: {}, algorithm: {}",
                    request.getKeyLabel(), request.getAlgorithm());
         
         try {
@@ -43,7 +43,7 @@ public class CryptoController {
             
             SignResponse response = new SignResponse(signature);
             
-            logger.info("Successfully completed signing request for key: {}", request.getKeyLabel());
+            logger.debug("Successfully completed signing request for key: {}", request.getKeyLabel());
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {

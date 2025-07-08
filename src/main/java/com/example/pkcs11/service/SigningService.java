@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 
 import java.security.PrivateKey;
 import java.security.Signature;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Base64;
 
 @Service
@@ -23,7 +25,7 @@ public class SigningService {
      */
     public String signData(String keyLabel, String algorithmType, String base64Data) {
         try {
-            logger.info("Starting signing operation for key: {}, algorithm: {}", keyLabel, algorithmType);
+            logger.debug("Starting signing operation for key: {}, algorithm: {}", keyLabel, algorithmType);
             
             // Decode the input data
             byte[] dataToSign = Base64.getDecoder().decode(base64Data);
@@ -38,16 +40,19 @@ public class SigningService {
             // Get the appropriate signing algorithm
             String signingAlgorithm = pkcs11ProviderService.getSigningAlgorithm(algorithmType, privateKey);
             logger.debug("Using signing algorithm: {}", signingAlgorithm);
-            
+            Instant start = Instant.now();
             // Perform the signing operation
             byte[] signatureBytes = performSigning(dataToSign, privateKey, signingAlgorithm);
-            
+            Duration elapsed = Duration.between(start, Instant.now());
             // Encode the signature as base64
             String base64Signature = Base64.getEncoder().encodeToString(signatureBytes);
             
-            logger.info("Successfully signed data for key: {}, signature length: {} bytes", 
-                       keyLabel, signatureBytes.length);
-            
+            logger.info("Successfully signed data for key: {}, signature length: {} bytes, duration: {} ms",
+                       keyLabel, signatureBytes.length,  elapsed.toMillis());
+
+//            logger.info("Successfully signed data for key: {}, signature length: {} bytes, duration: {} µs",
+//                       keyLabel, signatureBytes.length,  elapsed.toNanos() / 1_000);
+
             return base64Signature;
             
         } catch (SigningException e) {

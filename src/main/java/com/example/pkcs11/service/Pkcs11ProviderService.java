@@ -9,14 +9,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import java.security.*;
 import java.security.cert.Certificate;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @Profile("!test")
@@ -32,6 +29,7 @@ public class Pkcs11ProviderService {
 
     @Autowired
     private Map<String, Pkcs11Properties.KeyConfig> keyConfigMap;
+    private Map<String, PrivateKey> keyMap = new HashMap<>();
 
     // Cache for key store to avoid repeated PIN authentication
     private volatile KeyStore cachedKeyStore;
@@ -41,20 +39,26 @@ public class Pkcs11ProviderService {
      */
     public PrivateKey getPrivateKey(String keyLabel) {
         try {
-            Pkcs11Properties.KeyConfig keyConfig = keyConfigMap.get(keyLabel);
-            if (keyConfig == null) {
-                throw new KeyNotFoundException("Key configuration not found for label: " + keyLabel);
-            }
-
-            KeyStore keyStore = getKeyStore(keyLabel, keyConfig);
-            
-            // Find the key by alias
-            PrivateKey privateKey = findPrivateKeyByLabel(keyStore, keyLabel);
+            PrivateKey privateKey = keyMap.get(keyLabel);
             if (privateKey == null) {
-                throw new KeyNotFoundException("Private key not found for label: " + keyLabel);
-            }
 
-            logger.debug("Successfully retrieved private key for label: {}", keyLabel);
+                Pkcs11Properties.KeyConfig keyConfig = keyConfigMap.get(keyLabel);
+                if (keyConfig == null) {
+                    throw new KeyNotFoundException("Key configuration not found for label: " + keyLabel);
+                }
+
+                KeyStore keyStore = getKeyStore(keyLabel, keyConfig);
+
+                // Find the key by alias
+                privateKey = findPrivateKeyByLabel(keyStore, keyLabel);
+                if (privateKey == null) {
+                    throw new KeyNotFoundException("Private key not found for label: " + keyLabel);
+                }
+
+                logger.debug("Successfully retrieved private key for label: {}", keyLabel);
+
+                keyMap.put(keyLabel, privateKey);
+            }
             return privateKey;
 
         } catch (KeyNotFoundException e) {
@@ -77,6 +81,7 @@ public class Pkcs11ProviderService {
                         char[] pin = pkcs11Properties.getPin().toCharArray();
                         keyStore.load(null, pin);
                         logger.debug("KeyStore loaded successfully with provider PIN");
+                        debugKeystore(keyStore);
                         cachedKeyStore = keyStore;
                     } catch (Exception e) {
                         logger.error("Failed to load KeyStore with provider PIN", e);
@@ -93,11 +98,11 @@ public class Pkcs11ProviderService {
      */
     private PrivateKey findPrivateKeyByLabel(KeyStore keyStore, String keyLabel) throws Exception {
         Enumeration<String> aliases = keyStore.aliases();
-        
+
         while (aliases.hasMoreElements()) {
             String alias = aliases.nextElement();
             logger.debug("Checking alias: {}", alias);
-            
+
             // Check if this alias matches our key label or contains it
             if (alias.equals(keyLabel) || alias.contains(keyLabel)) {
                 if (keyStore.isKeyEntry(alias)) {
@@ -109,7 +114,7 @@ public class Pkcs11ProviderService {
                 }
             }
         }
-        
+
         // If exact match not found, try to find by certificate subject or other attributes
         return findPrivateKeyByAttributes(keyStore, keyLabel);
     }
@@ -119,10 +124,10 @@ public class Pkcs11ProviderService {
      */
     private PrivateKey findPrivateKeyByAttributes(KeyStore keyStore, String keyLabel) throws Exception {
         Enumeration<String> aliases = keyStore.aliases();
-        
+
         while (aliases.hasMoreElements()) {
             String alias = aliases.nextElement();
-            
+
             if (keyStore.isKeyEntry(alias)) {
                 Certificate cert = keyStore.getCertificate(alias);
                 if (cert != null) {
@@ -138,7 +143,7 @@ public class Pkcs11ProviderService {
                 }
             }
         }
-        
+
         return null;
     }
 
@@ -161,7 +166,7 @@ public class Pkcs11ProviderService {
      */
     public void validateKeyType(String expectedType, PrivateKey privateKey) {
         String keyAlgorithm = privateKey.getAlgorithm();
-        
+
         boolean isValid = false;
         switch (expectedType.toUpperCase()) {
             case "RSA":
@@ -171,10 +176,10 @@ public class Pkcs11ProviderService {
                 isValid = "EC".equals(keyAlgorithm) || "ECDSA".equals(keyAlgorithm);
                 break;
         }
-        
+
         if (!isValid) {
             throw new IllegalArgumentException(
-                String.format("Key type mismatch. Expected: %s, Found: %s", expectedType, keyAlgorithm)
+                    String.format("Key type mismatch. Expected: %s, Found: %s", expectedType, keyAlgorithm)
             );
         }
     }
@@ -188,4 +193,18 @@ public class Pkcs11ProviderService {
         }
         logger.info("KeyStore cache cleared");
     }
+
+    static void debugKeystore(KeyStore keyStore) throws KeyStoreException {
+        logger.info("keystore:debug");
+        int count = 0;
+        Enumeration<String> enumeration = keyStore.aliases();
+        while (enumeration.hasMoreElements()) {
+            count++;
+            logger.info("\tkeystore:debug:alias:" + enumeration.nextElement());
+        }
+        if (count == 0) {
+            logger.warn("\tkeystore:debug:alias count=" + count);
+        } else logger.info("\tkeystore:debug:alias count=" + count);
+    }
+
 }

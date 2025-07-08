@@ -7,7 +7,8 @@ A Java Spring Boot application that provides a REST API for signing data using P
 - 🔐 **PKCS#11 Integration**: Connect to hardware HSMs or SoftHSM via SunPKCS11
 - 🔑 **Multi-Key Support**: Configure multiple signing keys with different PINs
 - 🚀 **REST API**: Simple HTTP endpoint for signing operations
-- 📊 **Load Testing**: Included k6 scripts for performance testing
+- 📝 **Dynamic Logging**: Change log files and levels at runtime via REST API
+- � **Load Testing**: Included k6 scripts for performance testing
 - 🛡️ **Security**: Secure PIN handling and comprehensive error handling
 - ⚡ **Performance**: Key caching and optimized provider management
 
@@ -30,10 +31,9 @@ A Java Spring Boot application that provides a REST API for signing data using P
 ```bash
 export PKCS11_LIBRARY=/path/to/your/pkcs11/library.so
 export PKCS11_SLOT=0
+export PKCS11_PIN=your-pin
 export RSA_KEY_LABEL=your-rsa-key
-export RSA_KEY_PIN=your-pin
 export ECC_KEY_LABEL=your-ecc-key
-export ECC_KEY_PIN=your-pin
 ```
 
 2. **Application Configuration** (`application.yml`):
@@ -42,12 +42,11 @@ pkcs11:
   library: /path/to/pkcs11/library.so
   slot: 0
   provider-name: HSM-Provider
+  pin: 1234
   keys:
     - label: my-rsa-key
-      pin: 1234
       type: RSA
     - label: my-ecc-key
-      pin: 5678
       type: EC
 ```
 
@@ -122,6 +121,39 @@ java -jar target/spring-boot-sunpkcs11-0.0.1-SNAPSHOT.jar --spring.profiles.acti
   }
 }
 ```
+
+### Logging Management
+
+#### Change Log File
+**Endpoint**: `POST /v1/logging/change-file`
+
+**Request**:
+```json
+{
+  "logFileName": "new-application.log",
+  "logLevel": "DEBUG"
+}
+```
+
+**Response**:
+```json
+{
+  "currentLogFileName": "new-application.log",
+  "currentLogLevel": "DEBUG",
+  "previousLogFileName": "application.log",
+  "changedAt": "2025-01-08T14:30:00",
+  "status": "SUCCESS",
+  "message": "Log file changed successfully"
+}
+```
+
+#### Get Current Logging Configuration
+**Endpoint**: `GET /v1/logging/current`
+
+#### Generate Test Logs
+**Endpoint**: `POST /v1/logging/test?count=5`
+
+For detailed logging API documentation, see [LOGGING_API.md](LOGGING_API.md).
 
 ## Development Setup
 

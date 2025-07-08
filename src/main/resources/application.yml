@@ -1,5 +1,9 @@
 server:
-  port: 8080
+  port: 8085
+  tomcat:
+    threads:
+      max: 200
+      min-spare: 10
 
 spring:
   application:
@@ -7,24 +11,31 @@ spring:
 
 # PKCS#11 Configuration
 pkcs11:
-  library: ${PKCS11_LIBRARY:/opt/hsm/lib/libpkcs11.so}
-  slot: ${PKCS11_SLOT:0}
-  provider-name: ${PKCS11_PROVIDER_NAME:HSM-Provider}
+  library: ${PKCS11_LIBRARY:/usr/lib64/softhsm/libsofthsm.so}
+  slot: ${PKCS11_SLOT:-1}
+  provider-name: ${PKCS11_PROVIDER_NAME:SoftHSM-Provider}
   pin: ${PKCS11_PIN:1234}
   keys:
-    - label: ${RSA_KEY_LABEL:my-rsa-key}
+    - label: ${RSA_KEY_LABEL:rsa-2048}
       type: RSA
-    - label: ${ECC_KEY_LABEL:my-ecc-key}
+    - label: ${ECC_KEY_LABEL:ecc-256}
       type: EC
 
 # Logging configuration
 logging:
+  file:
+    name: logs/application.log
   level:
     com.example.pkcs11: INFO
     org.springframework.security: WARN
+    root: INFO
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
-    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  logback:
+    rollingpolicy:
+      max-history: 30
+      max-file-size: 10MB
 
 # Management endpoints
 management:
