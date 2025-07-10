@@ -81,7 +81,7 @@ class SigningServiceTest {
             .thenThrow(new RuntimeException("Key not found"));
 
         assertThrows(SigningException.class, () -> 
-            signingService.signData("nonexistent-key", "RSA", validBase64Data)
+            signingService.signData("nonexistent-key", "RSA", validBase64Data, "testSignData_KeyNotFound")
         );
     }
 
@@ -92,7 +92,7 @@ class SigningServiceTest {
             .when(pkcs11ProviderService).validateKeyType(anyString(), any());
 
         assertThrows(SigningException.class, () -> 
-            signingService.signData("test-key", "INVALID", validBase64Data)
+            signingService.signData("test-key", "INVALID", validBase64Data, "testSignData_InvalidAlgorithm")
         );
     }
 }

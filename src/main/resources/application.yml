@@ -24,7 +24,7 @@ pkcs11:
 # Logging configuration
 logging:
   file:
-    name: logs/application.log
+    name: __logs/application.log
   level:
     com.example.pkcs11: INFO
     org.springframework.security: WARN

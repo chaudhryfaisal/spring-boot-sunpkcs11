@@ -38,7 +38,8 @@ public class CryptoController {
             String signature = signingService.signData(
                 request.getKeyLabel(),
                 request.getAlgorithm(),
-                request.getData()
+                request.getData(),
+                request.getName()
             );
             
             SignResponse response = new SignResponse(signature);

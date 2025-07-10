@@ -19,7 +19,7 @@ public class LoggingConfigService {
     
     private static final Logger logger = LoggerFactory.getLogger(LoggingConfigService.class);
     private static final String DEFAULT_LOG_PATTERN = "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n";
-    private static final String LOGS_DIRECTORY = "logs";
+    private static final String LOGS_DIRECTORY = "__logs";
     
     private String currentLogFileName = "application.log";
     private String currentLogLevel = "INFO";
