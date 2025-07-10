@@ -3,8 +3,7 @@ package com.example.pkcs11.controller;
 import com.example.pkcs11.dto.SignRequest;
 import com.example.pkcs11.dto.SignResponse;
 import com.example.pkcs11.service.SigningService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,11 +12,10 @@ import javax.validation.Valid;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/v1/crypto")
 public class CryptoController {
-
-    private static final Logger logger = LoggerFactory.getLogger(CryptoController.class);
 
     @Autowired
     private SigningService signingService;
@@ -27,7 +25,7 @@ public class CryptoController {
      */
     @PostMapping("/sign")
     public ResponseEntity<SignResponse> signData(@Valid @RequestBody SignRequest request) {
-        logger.debug("Received signing request for key: {}, algorithm: {}",
+        log.debug("Received signing request for key: {}, algorithm: {}",
                    request.getKeyLabel(), request.getAlgorithm());
         
         try {
@@ -44,11 +42,11 @@ public class CryptoController {
             
             SignResponse response = new SignResponse(signature);
             
-            logger.debug("Successfully completed signing request for key: {}", request.getKeyLabel());
+            log.debug("Successfully completed signing request for key: {}", request.getKeyLabel());
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
-            logger.error("Failed to process signing request for key: {}", request.getKeyLabel(), e);
+            log.error("Failed to process signing request for key: {}", request.getKeyLabel(), e);
             throw e; // Let GlobalExceptionHandler handle it
         }
     }

@@ -1,7 +1,6 @@
 package com.example.pkcs11.exception;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -12,14 +11,13 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
-
     @ExceptionHandler(KeyNotFoundException.class)
     public ResponseEntity<Map<String, String>> handleKeyNotFoundException(KeyNotFoundException ex) {
-        logger.error("Key not found: {}", ex.getMessage());
+        log.error("Key not found: {}", ex.getMessage());
         Map<String, String> error = new HashMap<>();
         error.put("error", "Key not found");
         error.put("message", ex.getMessage());
@@ -28,7 +26,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(SigningException.class)
     public ResponseEntity<Map<String, String>> handleSigningException(SigningException ex) {
-        logger.error("Signing operation failed: {}", ex.getMessage(), ex);
+        log.error("Signing operation failed: {}", ex.getMessage(), ex);
         Map<String, String> error = new HashMap<>();
         error.put("error", "Signing failed");
         error.put("message", ex.getMessage());
@@ -38,7 +36,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        logger.error("Validation failed: {}", ex.getMessage());
+        log.error("Validation failed: {}", ex.getMessage());
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach((error) -> {
             String fieldName = ((FieldError) error).getField();
@@ -50,7 +48,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>> handleIllegalArgumentException(IllegalArgumentException ex) {
-        logger.error("Invalid argument: {}", ex.getMessage());
+        log.error("Invalid argument: {}", ex.getMessage());
         Map<String, String> error = new HashMap<>();
         error.put("error", "Invalid request");
         error.put("message", ex.getMessage());
@@ -59,7 +57,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleGenericException(Exception ex) {
-        logger.error("Unexpected error occurred: {}", ex.getMessage(), ex);
+        log.error("Unexpected error occurred: {}", ex.getMessage(), ex);
         Map<String, String> error = new HashMap<>();
         error.put("error", "Internal server error");
         error.put("message", "An unexpected error occurred");

@@ -1,9 +1,5 @@
 server:
   port: 8085
-  tomcat:
-    threads:
-      # max: 200
-      # min-spare: 10
 
 spring:
   application:

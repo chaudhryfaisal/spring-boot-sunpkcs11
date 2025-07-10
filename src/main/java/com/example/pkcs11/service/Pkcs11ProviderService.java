@@ -3,8 +3,7 @@ package com.example.pkcs11.service;
 import com.example.pkcs11.config.Pkcs11Properties;
 import com.example.pkcs11.exception.KeyNotFoundException;
 import com.example.pkcs11.exception.SigningException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
@@ -15,11 +14,10 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @Service
 @Profile("!test")
 public class Pkcs11ProviderService {
-
-    private static final Logger logger = LoggerFactory.getLogger(Pkcs11ProviderService.class);
 
     @Autowired
     private Provider pkcs11Provider;
@@ -47,7 +45,7 @@ public class Pkcs11ProviderService {
                     throw new KeyNotFoundException("Private key not found for label: " + keyLabel);
                 }
 
-                logger.debug("Successfully retrieved private key for label: {}", keyLabel);
+                log.debug("Successfully retrieved private key for label: {}", keyLabel);
 
                 keyMap.put(keyLabel, privateKey);
             }
@@ -56,7 +54,7 @@ public class Pkcs11ProviderService {
         } catch (KeyNotFoundException e) {
             throw e;
         } catch (Exception e) {
-            logger.error("Failed to retrieve private key for label: {}", keyLabel, e);
+            log.error("Failed to retrieve private key for label: {}", keyLabel, e);
             throw new SigningException("Failed to retrieve private key: " + e.getMessage(), e);
         }
     }
@@ -72,11 +70,11 @@ public class Pkcs11ProviderService {
                         KeyStore keyStore = KeyStore.getInstance("PKCS11", pkcs11Provider);
                         char[] pin = pkcs11Properties.getPin().toCharArray();
                         keyStore.load(null, pin);
-                        logger.debug("KeyStore loaded successfully with provider PIN");
+                        log.debug("KeyStore loaded successfully with provider PIN");
                         debugKeystore(keyStore);
                         cachedKeyStore = keyStore;
                     } catch (Exception e) {
-                        logger.error("Failed to load KeyStore with provider PIN", e);
+                        log.error("Failed to load KeyStore with provider PIN", e);
                         throw new SigningException("Failed to load KeyStore: " + e.getMessage(), e);
                     }
                 }
@@ -93,14 +91,14 @@ public class Pkcs11ProviderService {
 
         while (aliases.hasMoreElements()) {
             String alias = aliases.nextElement();
-            logger.debug("Checking alias: {}", alias);
+            log.debug("Checking alias: {}", alias);
 
             // Check if this alias matches our key label or contains it
             if (alias.equals(keyLabel) || alias.contains(keyLabel)) {
                 if (keyStore.isKeyEntry(alias)) {
                     Key key = keyStore.getKey(alias, null); // PKCS#11 doesn't use key passwords
                     if (key instanceof PrivateKey) {
-                        logger.debug("Found private key with alias: {}", alias);
+                        log.debug("Found private key with alias: {}", alias);
                         return (PrivateKey) key;
                     }
                 }
@@ -128,7 +126,7 @@ public class Pkcs11ProviderService {
                     if (alias.toLowerCase().contains(keyLabel.toLowerCase())) {
                         Key key = keyStore.getKey(alias, null);
                         if (key instanceof PrivateKey) {
-                            logger.debug("Found private key with matching alias: {}", alias);
+                            log.debug("Found private key with matching alias: {}", alias);
                             return (PrivateKey) key;
                         }
                     }
@@ -183,20 +181,20 @@ public class Pkcs11ProviderService {
         synchronized (this) {
             cachedKeyStore = null;
         }
-        logger.info("KeyStore cache cleared");
+        log.info("KeyStore cache cleared");
     }
 
     static void debugKeystore(KeyStore keyStore) throws KeyStoreException {
-        logger.info("keystore:debug");
+        log.info("keystore:debug");
         int count = 0;
         Enumeration<String> enumeration = keyStore.aliases();
         while (enumeration.hasMoreElements()) {
             count++;
-            logger.info("\tkeystore:debug:alias:" + enumeration.nextElement());
+            log.info("\tkeystore:debug:alias:" + enumeration.nextElement());
         }
         if (count == 0) {
-            logger.warn("\tkeystore:debug:alias count=" + count);
-        } else logger.info("\tkeystore:debug:alias count=" + count);
+            log.warn("\tkeystore:debug:alias count=" + count);
+        } else log.info("\tkeystore:debug:alias count=" + count);
     }
 
 }

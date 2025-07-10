@@ -1,8 +1,7 @@
 package com.example.pkcs11.service;
 
 import com.example.pkcs11.exception.SigningException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,10 +12,9 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
 
+@Slf4j
 @Service
 public class SigningService {
-
-    private static final Logger logger = LoggerFactory.getLogger(SigningService.class);
 
     @Autowired
     private Pkcs11ProviderService pkcs11ProviderService;
@@ -26,11 +24,11 @@ public class SigningService {
      */
     public String signData(String keyLabel, String algorithmType, String base64Data, @NotNull String name) {
         try {
-            logger.debug("Starting signing operation for key: {}, algorithm: {}", keyLabel, algorithmType);
+            log.debug("Starting signing operation for key: {}, algorithm: {}", keyLabel, algorithmType);
 
             // Decode the input data
             byte[] dataToSign = Base64.getDecoder().decode(base64Data);
-            logger.debug("Decoded {} bytes of data to sign", dataToSign.length);
+            log.debug("Decoded {} bytes of data to sign", dataToSign.length);
 
             // Get the private key
             PrivateKey privateKey = pkcs11ProviderService.getPrivateKey(keyLabel);
@@ -40,7 +38,7 @@ public class SigningService {
 
             // Get the appropriate signing algorithm
             String signingAlgorithm = pkcs11ProviderService.getSigningAlgorithm(algorithmType, privateKey);
-            logger.debug("Using signing algorithm: {}", signingAlgorithm);
+            log.debug("Using signing algorithm: {}", signingAlgorithm);
             Instant start = Instant.now();
             // Perform the signing operation
             byte[] signatureBytes = performSigning(dataToSign, privateKey, signingAlgorithm);
@@ -48,10 +46,10 @@ public class SigningService {
             // Encode the signature as base64
             String base64Signature = Base64.getEncoder().encodeToString(signatureBytes);
 
-            logger.info("Successfully signed data for key: {}, signature length: {} bytes, duration: {} ms {}",
+            log.info("Successfully signed data for key: {}, signature length: {} bytes, duration: {} ms {}",
                     keyLabel, signatureBytes.length, elapsed.toMillis(), name);
 
-//            logger.info("Successfully signed data for key: {}, signature length: {} bytes, duration: {} µs",
+//            log.info("Successfully signed data for key: {}, signature length: {} bytes, duration: {} µs",
 //                       keyLabel, signatureBytes.length,  elapsed.toNanos() / 1_000);
 
             return base64Signature;
@@ -59,7 +57,7 @@ public class SigningService {
         } catch (SigningException e) {
             throw e;
         } catch (Exception e) {
-            logger.error("Failed to sign data for key: {}", keyLabel, e);
+            log.error("Failed to sign data for key: {}", keyLabel, e);
             throw new SigningException("Signing operation failed: " + e.getMessage(), e);
         }
     }
@@ -81,13 +79,13 @@ public class SigningService {
             // Generate signature
             byte[] signatureBytes = signature.sign();
 
-            logger.debug("Generated signature of {} bytes using algorithm: {}",
+            log.debug("Generated signature of {} bytes using algorithm: {}",
                     signatureBytes.length, algorithm);
 
             return signatureBytes;
 
         } catch (Exception e) {
-            logger.error("Failed to perform signing operation with algorithm: {}", algorithm, e);
+            log.error("Failed to perform signing operation with algorithm: {}", algorithm, e);
             throw new SigningException("Cryptographic signing failed: " + e.getMessage(), e);
         }
     }
