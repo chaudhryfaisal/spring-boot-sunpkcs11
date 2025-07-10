@@ -4,11 +4,6 @@ pkcs11:
   slot: 0
   provider-name: SoftHSM-Provider
   pin: 1234
-  keys:
-    - label: test-rsa-key
-      type: RSA
-    - label: test-ecc-key
-      type: EC
 
 # Enhanced logging for development
 logging:

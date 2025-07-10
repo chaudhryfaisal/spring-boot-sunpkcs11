@@ -19,7 +19,7 @@ help: ## Show this help message
 
 sign: ## Test singn request with curl
 	curl -X POST '${ENDPOINT_SIGN}' -H 'Content-Type: application/json' \
-		-d '{"keyLabel":"rsa-2048","algorithm":"RSA","data":"SGVsbG8sIHdvcmxkIQ=="}'
+		-d '{"keyLabel":"rsa-2048","algorithm":"RSA","data":"SGVsbG8sIHdvcmxkIQ==","name":"curl_sign"}'
 # Clean targets
 .PHONY: clean
 clean: ## Clean build artifacts

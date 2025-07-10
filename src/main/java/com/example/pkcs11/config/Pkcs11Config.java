@@ -12,8 +12,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.Provider;
 import java.security.Security;
-import java.util.HashMap;
-import java.util.Map;
 
 @Configuration
 @Profile("!test")
@@ -42,15 +40,6 @@ public class Pkcs11Config {
         return provider;
     }
 
-    @Bean
-    public Map<String, Pkcs11Properties.KeyConfig> keyConfigMap() {
-        Map<String, Pkcs11Properties.KeyConfig> keyMap = new HashMap<>();
-        for (Pkcs11Properties.KeyConfig keyConfig : pkcs11Properties.getKeys()) {
-            keyMap.put(keyConfig.getLabel(), keyConfig);
-        }
-        logger.info("Loaded {} key configurations", keyMap.size());
-        return keyMap;
-    }
 
     private String createPkcs11Config() {
         StringBuilder config = new StringBuilder();

@@ -35,14 +35,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 
-    @ExceptionHandler(LoggingConfigurationException.class)
-    public ResponseEntity<Map<String, String>> handleLoggingConfigurationException(LoggingConfigurationException ex) {
-        logger.error("Logging configuration error: {}", ex.getMessage(), ex);
-        Map<String, String> error = new HashMap<>();
-        error.put("error", "Logging configuration failed");
-        error.put("message", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
-    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex) {

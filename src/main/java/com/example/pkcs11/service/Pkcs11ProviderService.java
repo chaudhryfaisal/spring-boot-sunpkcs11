@@ -27,8 +27,6 @@ public class Pkcs11ProviderService {
     @Autowired
     private Pkcs11Properties pkcs11Properties;
 
-    @Autowired
-    private Map<String, Pkcs11Properties.KeyConfig> keyConfigMap;
     private Map<String, PrivateKey> keyMap = new HashMap<>();
 
     // Cache for key store to avoid repeated PIN authentication
@@ -41,13 +39,7 @@ public class Pkcs11ProviderService {
         try {
             PrivateKey privateKey = keyMap.get(keyLabel);
             if (privateKey == null) {
-
-                Pkcs11Properties.KeyConfig keyConfig = keyConfigMap.get(keyLabel);
-                if (keyConfig == null) {
-                    throw new KeyNotFoundException("Key configuration not found for label: " + keyLabel);
-                }
-
-                KeyStore keyStore = getKeyStore(keyLabel, keyConfig);
+                KeyStore keyStore = getKeyStore();
 
                 // Find the key by alias
                 privateKey = findPrivateKeyByLabel(keyStore, keyLabel);
@@ -72,7 +64,7 @@ public class Pkcs11ProviderService {
     /**
      * Gets or creates a KeyStore for the PKCS#11 provider
      */
-    private KeyStore getKeyStore(String keyLabel, Pkcs11Properties.KeyConfig keyConfig) throws Exception {
+    private KeyStore getKeyStore() throws Exception {
         if (cachedKeyStore == null) {
             synchronized (this) {
                 if (cachedKeyStore == null) {
