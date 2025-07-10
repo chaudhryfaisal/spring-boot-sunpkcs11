@@ -62,8 +62,10 @@ test-integration: ## Run integration tests
 test-all: ## Run all tests (unit + integration)
 	$(MAVEN) verify
 	@echo "✅ All tests completed"
+
+PKCS11SPY_LIB := $(firstword $(wildcard /usr/lib64/pkcs11-spy.so /usr/lib/x86_64-linux-gnu/pkcs11-spy.so))
 run-pkcs11-spy: ## Run the application
-	 export PKCS11_LIBRARY=/usr/lib64/pkcs11-spy.so PKCS11SPY=${SOFTHSM2_LIB}; make run
+	 export PKCS11_LIBRARY=${PKCS11SPY_LIB} PKCS11SPY=${SOFTHSM2_LIB}; make run
 # Run targets
 .PHONY: run
 run: ## Run the application
@@ -91,7 +93,6 @@ benchmark-install: ## Install k6 (requires sudo)
 	@echo "Installing k6..."
 	which k6 || curl -sSL https://github.com/grafana/k6/releases/download/v1.1.0/k6-v1.1.0-linux-amd64.tar.gz | \
 		tar -xzv -C ${HOME}/.local/bin --strip-components=1
-
 
 benchmark: benchmark-check ## Run load tests with k6
 	@echo "🔥 Starting load tests..."
